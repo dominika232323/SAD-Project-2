@@ -73,3 +73,77 @@ abline(v = gamma_thresh, col = "darkgreen", lty = 2, lwd = 2)
 legend("topright", legend = c("H0 (Tylko szum)", "H1 (Sygnał+Szum)", "Próg detekcji (gamma)"),
        col = c("blue", "red", "darkgreen"), lty = c(1, 1, 2), lwd = 2)
 
+
+# ----------------------------------------------------------------------
+# Analiza teoretycznej mocy detektora GLRT w funkcji A oraz N
+# ----------------------------------------------------------------------
+
+# Czyszczenie przestrzeni i ustawienie parametrów stałych
+graphics.off()
+alpha <- 0.05
+sigma <- 2.0
+gamma_thresh <- qchisq(1 - alpha, df = 1)
+
+# Ustawienie podziału okna graficznego na 2 wykresy obok siebie
+par(mfrow = c(1, 2), mar = c(5, 5, 4, 2))
+
+# ======================================================================
+# WYKRES 1: Moc testu vs Amplituda (A) dla różnych N
+# ======================================================================
+A_seq <- seq(0, 0.6, length.out = 200) # Zakres amplitud do analizy
+N_values <- c(250, 500, 1000, 2000)    # Różne długości sekwencji
+kolory_N <- c("orange", "green3", "blue", "purple")
+
+# Inicjalizacja pustego wykresu
+plot(NULL, xlim = c(0, max(A_seq)), ylim = c(0, 1),
+     xlab = "Amplituda sygnału (A)", 
+     ylab = "Prawdopodobieństwo wykrycia (P_D)",
+     main = "Moc testu w funkcji amplitudy",
+     cex.lab = 1.2, cex.main = 1.1)
+abline(h = alpha, col = "gray", lty = 3) # Poziom fałszywego alarmu
+abline(h = 1.0, col = "gray", lty = 3)
+
+# Rysowanie krzywych dla każdego N
+for (i in 1:length(N_values)) {
+  N_curr <- N_values[i]
+  # Obliczenie parametru niecentralności lambda dla wektora amplitud
+  lambda_seq <- N_curr * (A_seq^2) / (sigma^2)
+  # Teoretyczna moc testu
+  Pow_seq <- 1 - pchisq(gamma_thresh, df = 1, ncp = lambda_seq)
+  
+  lines(A_seq, Pow_seq, col = kolory_N[i], lwd = 2.5)
+}
+
+legend("bottomright", legend = paste("N =", N_values),
+       col = kolory_N, lty = 1, lwd = 2.5, bty = "n", title = "Długość kodu")
+
+# ======================================================================
+# WYKRES 2: Moc testu vs Liczba próbek (N) dla różnych A
+# ======================================================================
+N_seq <- seq(10, 3000, length.out = 300) # Zakres liczby próbek do analizy
+A_values <- c(0.1, 0.2, 0.3, 0.4)        # Różne wartości amplitudy
+kolory_A <- c("red", "chocolate", "darkblue", "magenta4")
+
+# Inicjalizacja pustego wykresu
+plot(NULL, xlim = c(0, max(N_seq)), ylim = c(0, 1),
+     xlab = "Liczba próbek (N)", 
+     ylab = "Prawdopodobieństwo wykrycia (P_D)",
+     main = "Moc testu w funkcji liczby próbek",
+     cex.lab = 1.2, cex.main = 1.1)
+abline(h = alpha, col = "gray", lty = 3)
+abline(h = 1.0, col = "gray", lty = 3)
+
+# Rysowanie krzywych dla każdej amplitudy A
+for (i in 1:length(A_values)) {
+  A_curr <- A_values[i]
+  # Obliczenie parametru niecentralności lambda dla wektora N
+  lambda_seq <- N_seq * (A_curr^2) / (sigma^2)
+  # Teoretyczna moc testu
+  Pow_seq <- 1 - pchisq(gamma_thresh, df = 1, ncp = lambda_seq)
+  
+  lines(N_seq, Pow_seq, col = kolory_A[i], lwd = 2.5)
+}
+
+legend("bottomright", legend = paste("A =", A_values),
+       col = kolory_A, lty = 1, lwd = 2.5, bty = "n", title = "Amplituda")
+
